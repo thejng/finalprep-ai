@@ -1,9 +1,14 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
 [functions]
   node_bundler = "esbuild"
   included_files = ["node_modules/pdf-parse/**"]
   external_node_modules = ["pdf-parse"]
 
+# Prevent treating the API route as an Edge Function
 [[edge_functions]]
   path = "/api/parse-pdf"
-  function = "api/parse-pdf"
+  function = "parse-pdf"
   excluded = true

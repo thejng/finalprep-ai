@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { BrainCircuit, Loader2, Upload, FileText, X, File } from 'lucide-react';
-import { parsePDFFile } from '@/app/actions';
 
 interface InputSectionProps {
   onAnalyze: (syllabusText: string, papersText: string) => void;
@@ -39,6 +38,20 @@ export function InputSection({ onAnalyze, isLoading }: InputSectionProps) {
   
   const syllabusFileRef = useRef<HTMLInputElement>(null);
   const papersFileRef = useRef<HTMLInputElement>(null);
+
+  const parsePDFViaApi = async (file: File): Promise<{ text: string; pages: number }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch('/api/parse-pdf', {
+      method: 'POST',
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Failed to parse PDF' }));
+      throw new Error(err.error || 'Failed to parse PDF');
+    }
+    return res.json();
+  };
 
   const validatePDFFile = (file: File): boolean => {
     // Check file type
@@ -82,8 +95,7 @@ export function InputSection({ onAnalyze, isLoading }: InputSectionProps) {
     }
 
     try {
-      const arrayBuffer = await file.arrayBuffer();
-      const result = await parsePDFFile(arrayBuffer);
+      const result = await parsePDFViaApi(file);
       
       if (type === 'syllabus') {
         setSyllabusText(result.text);
@@ -150,8 +162,7 @@ export function InputSection({ onAnalyze, isLoading }: InputSectionProps) {
 
     for (const file of validFiles) {
       try {
-        const arrayBuffer = await file.arrayBuffer();
-        const result = await parsePDFFile(arrayBuffer);
+        const result = await parsePDFViaApi(file);
         combinedText = combinedText ? `${combinedText}\n\n--- ${file.name} ---\n\n${result.text}` : result.text;
         processedFiles.push(file);
       } catch (error) {

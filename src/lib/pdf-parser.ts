@@ -1,4 +1,7 @@
-import { pdf } from 'pdf-parse';
+// Note: Avoid static importing of `pdf-parse` because its ESM build pulls in a pdf.js worker
+// that breaks certain bundlers during Next.js production builds. We dynamically require it
+// only inside the Node-only function below to keep client bundles clean and prevent webpack
+// from analyzing the dependency.
 
 export interface PDFParseResult {
   text: string;
@@ -6,9 +9,14 @@ export interface PDFParseResult {
   info?: any;
 }
 
+// Server-side parsing with pdf-parse (Node only)
 export async function parsePDF(buffer: Buffer): Promise<PDFParseResult> {
   try {
-    const data = await pdf(buffer);
+    // Dynamically require to avoid bundling `pdf-parse` in client/edge builds
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdfParseModule: any = (0, eval)('require')('pdf-parse');
+    const pdfFn = pdfParseModule.pdf ?? pdfParseModule; // support both ESM named and CJS default
+    const data = await pdfFn(buffer);
     return {
       text: data.text,
       pages: (data as any).numpages || 1,
@@ -56,10 +64,9 @@ export async function parsePDFClient(input: ArrayBuffer | Uint8Array | Blob): Pr
   // Dynamically import pdfjs to avoid SSR issues
   const pdfjsLib = await import('pdfjs-dist');
 
-  // Set worker source. Using CDN for simplicity and reliability across bundlers.
-  // If you prefer local worker, host it in public/ and point to it here.
+  // Set worker to same-origin file served from public/
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (pdfjsLib as any).GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.js';
+  (pdfjsLib as any).GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
   // Load document
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

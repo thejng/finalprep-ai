@@ -1,6 +1,7 @@
 'use client';
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
+import { parsePDFClient } from '@/lib/pdf-parser';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -39,18 +40,9 @@ export function InputSection({ onAnalyze, isLoading }: InputSectionProps) {
   const syllabusFileRef = useRef<HTMLInputElement>(null);
   const papersFileRef = useRef<HTMLInputElement>(null);
 
-  const parsePDFViaApi = async (file: File): Promise<{ text: string; pages: number }> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    const res = await fetch('/api/parse-pdf', {
-      method: 'POST',
-      body: formData,
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ error: 'Failed to parse PDF' }));
-      throw new Error(err.error || 'Failed to parse PDF');
-    }
-    return res.json();
+  // Client-side PDF parsing using pdf.js
+  const parsePDFOnClient = async (file: File): Promise<{ text: string; pages: number }> => {
+    return parsePDFClient(file);
   };
 
   const validatePDFFile = (file: File): boolean => {
@@ -95,7 +87,7 @@ export function InputSection({ onAnalyze, isLoading }: InputSectionProps) {
     }
 
     try {
-      const result = await parsePDFViaApi(file);
+      const result = await parsePDFOnClient(file);
       
       if (type === 'syllabus') {
         setSyllabusText(result.text);
@@ -162,7 +154,7 @@ export function InputSection({ onAnalyze, isLoading }: InputSectionProps) {
 
     for (const file of validFiles) {
       try {
-        const result = await parsePDFViaApi(file);
+        const result = await parsePDFOnClient(file);
         combinedText = combinedText ? `${combinedText}\n\n--- ${file.name} ---\n\n${result.text}` : result.text;
         processedFiles.push(file);
       } catch (error) {

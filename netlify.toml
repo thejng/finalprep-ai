@@ -1,0 +1,9 @@
+[functions]
+  node_bundler = "esbuild"
+  included_files = ["node_modules/pdf-parse/**"]
+  external_node_modules = ["pdf-parse"]
+
+[[edge_functions]]
+  path = "/api/parse-pdf"
+  function = "api/parse-pdf"
+  excluded = true

@@ -48,7 +48,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <aside className="hidden md:flex flex-col border-r bg-muted/40">
           <div className="flex h-16 items-center border-b px-6">
             <a href="/" className="flex items-center gap-2 font-headline font-semibold text-lg">
-              <Image src="/favicon.ico" alt="FinalPrep AI" width={24} height={24} className="h-12 w-12" />
+              <Image src="/favicon.ico" alt="FinalPrep AI" width={24} height={24} className="h-10 w-10" />
               <span>FinalPrep AI</span>
             </a>
           </div>

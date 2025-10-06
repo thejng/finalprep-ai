@@ -16,6 +16,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { AppHeader } from './header';
+import { AppFooter } from './footer';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '#input' },
@@ -80,6 +81,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             <AppHeader />
           </header>
           <main className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8">{children}</main>
+          <AppFooter />
         </div>
       </div>
     </div>
